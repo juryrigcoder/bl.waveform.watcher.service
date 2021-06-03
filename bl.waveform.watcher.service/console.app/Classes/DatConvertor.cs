@@ -34,7 +34,7 @@ namespace console.app
             {
                 if (!File.Exists($"{_config.GetValue<string>("DirectoryStructures:DataFolder")}{fileName}.dat"))
                 {
-                    await Cli.Wrap(@"C:\Temp\Demo-wavegen\bl.waveform.watcher.service\bl.waveform.watcher.service\console.app\bbc\audiowaveform.exe")
+                    await Cli.Wrap(@".\bbc\audiowaveform.exe")
                 .WithArguments(new[] { "-i", $"{_config.GetValue<string>("DirectoryStructures:OutputFolder")}{fileName}.mp3", "-o", $"{_config.GetValue<string>("DirectoryStructures:DataFolder")}{fileName}.dat", "-b", "8" })
                 .WithWorkingDirectory($"{_config.GetValue<string>("DirectoryStructures:OutputFolder")}")
                 .WithValidation(CommandResultValidation.None)
@@ -57,7 +57,7 @@ namespace console.app
             {
                 try
                 {
-                    await Cli.Wrap(@"C:\Temp\Demo-wavegen\bl.waveform.watcher.service\bl.waveform.watcher.service\console.app\bbc\audiowaveform.exe")
+                    await Cli.Wrap(@".\bbc\audiowaveform.exe")
                     .WithArguments(new[] { "-i", $"{fileToConvert}", "-o", $"{_config.GetValue<string>("DirectoryStructures:DataFolder")}/{fileToConvert.Name}.dat", "-b", "8" })
                     .WithWorkingDirectory($"{_config.GetValue<string>("DirectoryStructures:OutputFolder")}")
                     .ExecuteAsync();
