@@ -11,84 +11,59 @@ using Xabe.FFmpeg;
 using Xabe.FFmpeg.Downloader;
 using CliWrap;
 using myoddweb.directorywatcher;
+using System.Threading;
+using console.app.Domain;
 
 namespace console.app
 {
     class App
     {
         private readonly IConfiguration _config;
+        private readonly DatConvertor _dat;
+        private readonly MpegConvertor _mpeg;
 
-        public App(IConfiguration config)
+        public App(IConfiguration config, DatConvertor dat, MpegConvertor mpeg)
         {
             _config = config;
-
+            _dat = dat;
+            _mpeg = mpeg;
         }
 
-        public void Run(string[] args)
+        public async Task RunAsync(string[] args)
         {
-            if(_config.GetValue<bool>("Ingest:Full") == true)
+            if (_config.GetValue<bool>("Ingest:Full") == true)
             {
-            ConvertMpeg().Wait();
-            ConvertDat().Wait();
+                _mpeg.ConvertMpeg().Wait();
+               await _dat.ConvertDat();
             }
 
             using (var watch = new Watcher())
             {
-                watch.Add(new Request($"{_config.GetValue<string>("DirectoryStructures:InsputFolder")}", true));
+                watch.Add(new Request($"{_config.GetValue<string>("DirectoryStructures:InputFolder")}", false));
+                watch.Add(new Request($"{_config.GetValue<string>("DirectoryStructures:OutputFolder")}", false));
+
                 watch.OnAddedAsync += async (f, t) =>
                 {
-                    await ConvertMpeg();
+                    Console.Write(f.Name);
+
+                    //await Task.WhenAll(_mpeg.ConvertMpeg(f.Name), _dat.ConvertDat(f.FullName));
+
+                    if (f.FileSystemInfo.Exists)
+                        _mpeg.ConvertMpeg(f.Name).Wait();
+                      
+                    
+                    if(!Utility.IsFileLocked(new FileInfo(f.FullName)))
+                        await _dat.ConvertDat(f.FullName);
+                    
                 };
+                watch.Start();
+
+                Console.WriteLine("Press Ctrl+C to stop to exit.");
+                Utility.WaitForCtrlC();
+
+                watch.Stop();
             }
-        }
 
-        private async Task ConvertMpeg()
-        {
-            ConcurrentQueue<FileInfo> MP4FilesToConvert = new ConcurrentQueue<FileInfo>((IEnumerable<FileInfo>)GetMpegFilesToConvert("path to files"));
-            FFmpeg.SetExecutablesPath(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
-            await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official);
-            await RunMpegConversion(MP4FilesToConvert);
-        }
-
-        private async Task ConvertDat() {
-            ConcurrentQueue<FileInfo> MP3ToConvert = new ConcurrentQueue<FileInfo>((IEnumerable<FileInfo>)GetDatFilesToConvert("path to files"));
-
-            await ConvertToDat(MP3ToConvert);
-        }
-
-        private IEnumerable GetMpegFilesToConvert(string path)
-        {
-            return new DirectoryInfo(path).GetFiles().Where(x => x.Extension == "mp4");
-        }
-
-        private IEnumerable GetDatFilesToConvert(string path)
-        {
-            return new DirectoryInfo(path).GetFiles().Where(x => x.Extension == "mp3");
-        }
-
-        private async Task RunMpegConversion(ConcurrentQueue<FileInfo> mp4FilesToConvert)
-        {
-            while (mp4FilesToConvert.TryDequeue(out FileInfo fileToConvert))
-            {
-                string output = Path.ChangeExtension(Path.GetTempFileName(), ".mp3");
-                var conversion = await FFmpeg.Conversions.FromSnippet.ExtractAudio(fileToConvert.FullName, output);
-                await conversion.Start();
-            }
-        }
-
-        private async Task ConvertToDat(ConcurrentQueue<FileInfo> mp3FilesToConvert)
-        {
-            /*
-             * https://github.com/bbc/audiowaveform#usage
-             * audiowaveform -i filesource -o fileoutput -b 8 --pixels-per-second 100
-             */
-            while (mp3FilesToConvert.TryDequeue(out FileInfo fileToConvert))
-            {
-                await Cli.Wrap("path/to/exe")
-                .WithArguments(new[] { "-i", $"{_config.GetValue<string>("DirectoryStructures:OutputFolder")}/{fileToConvert.FullName}", "-o", $"{_config.GetValue<string>("DirectoryStructures:OutputFolder")}/{fileToConvert.FullName}.dat", "-b", "8" })
-                .WithWorkingDirectory($"{_config.GetValue<string>("DirectoryStructures:OutputFolder")}")
-                .ExecuteAsync();
-            }
         }
     }
 }

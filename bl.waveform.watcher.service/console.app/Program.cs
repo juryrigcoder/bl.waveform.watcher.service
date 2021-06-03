@@ -2,18 +2,19 @@
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace console.app
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             var services = ConfigurationServices();
 
             var servicesProvider = services.BuildServiceProvider();
 
-            servicesProvider.GetService<App>().Run(args);
+            await servicesProvider.GetService<App>().RunAsync(args);
         }
 
         public static IServiceCollection ConfigurationServices() {
@@ -22,6 +23,8 @@ namespace console.app
             var config = LoadConfiguration();
             services.AddSingleton(config);
             services.AddSingleton<App>();
+            services.AddSingleton<DatConvertor>();
+            services.AddSingleton<MpegConvertor>();
             return services;
         }
 
