@@ -1,14 +1,13 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using CliWrap;
+using console.app.Interfaces;
+using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using CliWrap;
-using console.app.Interfaces;
-using System;
-using console.app.Domain;
 
 namespace console.app
 {
@@ -20,7 +19,7 @@ namespace console.app
         {
             _config = config;
         }
-        
+
         public async Task ConvertDat()
         {
             ConcurrentQueue<FileInfo> MP3ToConvert = new ConcurrentQueue<FileInfo>((IEnumerable<FileInfo>)GetDatFilesToConvert(_config.GetValue<string>("DirectoryStructures:OutputFolder")));
@@ -61,7 +60,9 @@ namespace console.app
                     .WithArguments(new[] { "-i", $"{fileToConvert}", "-o", $"{_config.GetValue<string>("DirectoryStructures:DataFolder")}/{fileToConvert.Name}.dat", "-b", "8" })
                     .WithWorkingDirectory($"{_config.GetValue<string>("DirectoryStructures:OutputFolder")}")
                     .ExecuteAsync();
-                }catch(Exception ex){
+                }
+                catch (Exception ex)
+                {
                     Console.WriteLine(ex);
                 }
             }

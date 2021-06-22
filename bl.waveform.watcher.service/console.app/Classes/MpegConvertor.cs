@@ -43,7 +43,8 @@ namespace console.app
                     await conversion.Start();
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Console.WriteLine($"Exception at convert to mpeg from folder watcher: {ex.Message}" + Environment.NewLine);
             }
         }

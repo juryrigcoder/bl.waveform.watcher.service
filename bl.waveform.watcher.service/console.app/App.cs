@@ -1,18 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
-using Xabe.FFmpeg;
-using Xabe.FFmpeg.Downloader;
-using CliWrap;
+﻿using console.app.Domain;
+using Microsoft.Extensions.Configuration;
 using myoddweb.directorywatcher;
-using System.Threading;
-using console.app.Domain;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace console.app
 {
@@ -34,7 +25,7 @@ namespace console.app
             if (_config.GetValue<bool>("Ingest:Full") == true)
             {
                 _mpeg.ConvertMpeg().Wait();
-               await _dat.ConvertDat();
+                await _dat.ConvertDat();
             }
 
             using (var watch = new Watcher())
@@ -50,11 +41,11 @@ namespace console.app
 
                     if (f.FileSystemInfo.Exists)
                         _mpeg.ConvertMpeg(f.Name).Wait();
-                      
-                    
-                    if(!Utility.IsFileLocked(new FileInfo(f.FullName)))
+
+
+                    if (!Utility.IsFileLocked(new FileInfo(f.FullName)))
                         await _dat.ConvertDat(f.FullName);
-                    
+
                 };
                 watch.Start();
 

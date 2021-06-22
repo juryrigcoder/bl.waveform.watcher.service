@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -17,7 +16,8 @@ namespace console.app
             await servicesProvider.GetService<App>().RunAsync(args);
         }
 
-        public static IServiceCollection ConfigurationServices() {
+        public static IServiceCollection ConfigurationServices()
+        {
             IServiceCollection services = new ServiceCollection();
             var serviceProvider = services.BuildServiceProvider();
             var config = LoadConfiguration();
@@ -28,10 +28,11 @@ namespace console.app
             return services;
         }
 
-        public static IConfiguration LoadConfiguration() {
+        public static IConfiguration LoadConfiguration()
+        {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Path.GetDirectoryName(typeof(Program).Assembly.Location))
-                .AddJsonFile("appsettings.json",true,true)
+                .AddJsonFile("appsettings.json", true, true)
                 .AddEnvironmentVariables();
             return builder.Build();
         }
